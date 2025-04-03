@@ -43,8 +43,8 @@ class VectorGraphicsEditor extends JPanel {
 
     private final JTextField rField, gField, bField;
     private Color currentColor = Color.BLACK;
-    
-    private final JButton saveButton, loadButton;
+
+    private final JButton saveButton, loadButton, clearButton;
 
     public VectorGraphicsEditor() {
         setLayout(new BorderLayout());
@@ -87,9 +87,12 @@ class VectorGraphicsEditor extends JPanel {
         saveButton.addActionListener(e -> drawPanel.saveShapes());
         loadButton = new JButton("Load");
         loadButton.addActionListener(e -> drawPanel.loadShapes());
+        clearButton = new JButton("Clear");
+        clearButton.addActionListener(e -> drawPanel.clear());
 
         controlPanel.add(saveButton);
         controlPanel.add(loadButton);
+        controlPanel.add(clearButton);
 
         add(controlPanel, BorderLayout.SOUTH);
     }
@@ -99,9 +102,15 @@ class VectorGraphicsEditor extends JPanel {
             int r = Integer.parseInt(rField.getText());
             int g = Integer.parseInt(gField.getText());
             int b = Integer.parseInt(bField.getText());
+
+            // // Clamp values to 0-255
+            // r = Math.max(0, Math.min(255, r));
+            // g = Math.max(0, Math.min(255, g));
+            // b = Math.max(0, Math.min(255, b));
+            
             currentColor = new Color(r, g, b);
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Invalid RGB values");
+        } catch (Exception e) { // Values are not integers or out of range
+            JOptionPane.showMessageDialog(this, "Invalid color values. Please enter integers between 0 and 255.");
         }
     }
 
@@ -182,14 +191,39 @@ class VectorGraphicsEditor extends JPanel {
             }
             repaint();
         }
+
+        public void clear() {
+            shapes.clear();
+            repaint();
+        }
     }
 }
 
 interface Shape {
     void draw(Graphics g);
-    String toString();
-    static Shape fromString(String s) {
-        return null; // Implement parsing logic here
+    String toString(); // Serialize the shape to a string representation
+    static Shape fromString(String s) { // Deserialize the shape from a string representation
+        // split the string into parts
+        String[] s_split = s.split(" ");
+        String shapeType = s_split[0];
+        int x = Integer.parseInt(s_split[1]);
+        int y = Integer.parseInt(s_split[2]);
+        String color = s_split[s_split.length - 1];
+        switch (shapeType) {
+            case "LINE":
+                Point start = new Point(x, y);
+                Point end = new Point(Integer.parseInt(s_split[3]), Integer.parseInt(s_split[4]));
+                return new Line(start, end, new Color(Integer.parseInt(color)));
+            case "RECTANGLE":
+                int width = Integer.parseInt(s_split[3]);
+                int height = Integer.parseInt(s_split[4]);
+                return new Rect(new Point(x, y), new Point(x + width, y + height), new Color(Integer.parseInt(color)));
+            case "CIRCLE":
+                int radius = Integer.parseInt(s_split[3]);
+                return new Circle(new Point(x, y), radius, new Color(Integer.parseInt(color)));
+            default:
+                return null; // Unknown shape type
+        }
     }
 }
 
@@ -250,6 +284,13 @@ class Circle implements Shape {
         this.radius = (int) Math.sqrt(dx * dx + dy * dy);
         this.x = center.x - radius;
         this.y = center.y - radius;
+        this.color = color;
+    }
+
+    public Circle(Point center, int radius, Color color) {
+        this.x = center.x - radius;
+        this.y = center.y - radius;
+        this.radius = radius;
         this.color = color;
     }
 
