@@ -82,6 +82,7 @@ class VectorGraphicsEditor extends JPanel {
     private class DrawPanel extends JPanel {
         private final ArrayList<Shape> shapes = new ArrayList<>();
         private Shape currentShape = null; // Shape being drawn/edited dynamically
+        private Point selectedLineEnd = null;
         private Point lastClickPoint;
 
         private static final int CLICK_RADIUS = 40;
@@ -127,6 +128,7 @@ class VectorGraphicsEditor extends JPanel {
                         case EDIT:
                             if (SwingUtilities.isLeftMouseButton(e)) {
                                 currentShape = null;
+                                selectedLineEnd = null;
                             }
                             break;
                     }
@@ -142,7 +144,13 @@ class VectorGraphicsEditor extends JPanel {
                             if (SwingUtilities.isLeftMouseButton(e)) {dynamicDrawing(e);} // Draw the shape dynamically
                             break;
                         case EDIT:
-                            if (SwingUtilities.isLeftMouseButton(e)) {dynamicMoving(e);} // Move the shape dynamically
+                            if (SwingUtilities.isLeftMouseButton(e)) {
+                                if (currentShape instanceof Line && selectedLineEnd != null) {
+                                    dynamicLineEndEditing(e); // Move the selected line end
+                                } else {
+                                    dynamicMoving(e); // Move the selected shape
+                                }
+                            } 
                             break;
                     }
                 }
@@ -204,6 +212,28 @@ class VectorGraphicsEditor extends JPanel {
         
             g.dispose();
         };
+
+        private void dynamicLineEndEditing(MouseEvent e) {
+            Graphics g = getGraphics();
+            g.setXORMode(getBackground()); // XOR mode for dynamic drawing (better visibility)
+            g.setColor(currentColor);
+        
+            if (currentShape != null) {
+                currentShape.draw(g); // Erase the previous shape by drawing it in XOR mode
+            }
+        
+            // Update the position of the selected line end
+            selectedLineEnd.setLocation(e.getPoint());
+            if (currentShape instanceof Line) {
+                Line line = (Line) currentShape;
+                line.recalculateCenter();
+            }
+        
+            // draw the updated line
+            currentShape.draw(g);
+        
+            g.dispose();
+        }
         
         // Try to find a shape that is in range of the click point (selects one at a time)
         private void selectShape() {
@@ -211,9 +241,24 @@ class VectorGraphicsEditor extends JPanel {
                 Point center = shape.getCenter();
                 if (center.distance(lastClickPoint) <= CLICK_RADIUS) {
                     currentShape = shape;
-                    break;
+                    return;
                 }
+                else if (shape instanceof Line) {
+                    Line line = (Line) shape;
+                    if (line.getStart().distance(lastClickPoint) <= CLICK_RADIUS) {
+                        currentShape = line;
+                        selectedLineEnd = line.getStart(); // Wybrano początek linii
+                        return;
+                    } else if (line.getEnd().distance(lastClickPoint) <= CLICK_RADIUS) {
+                        currentShape = line;
+                        selectedLineEnd = line.getEnd(); // Wybrano koniec linii
+                        return;
+                    }
+                }
+                //print
             }
+            currentShape = null;
+            selectedLineEnd = null;
         }
 
         @Override
@@ -404,12 +449,21 @@ class Line implements Shape {
     public Point getCenter() {
         return center;
     }
+    public Point getStart() {
+        return start;
+    }
+    public Point getEnd() {
+        return end;
+    }
 
     @Override
     public void move(int dx, int dy) {
         start.translate(dx, dy);
         end.translate(dx, dy);
         center.translate(dx, dy);
+    }
+    public void recalculateCenter() {
+        center.setLocation((start.x + end.x) / 2, (start.y + end.y) / 2);
     }
 }
 
