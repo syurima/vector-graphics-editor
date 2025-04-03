@@ -37,16 +37,12 @@ class VectorGraphicsEditorWindow extends JFrame {
 
 class VectorGraphicsEditor extends JPanel {
     private final DrawPanel drawPanel;
+    private final OperationPanel operationPanel;
+    private final ControlPanel controlPanel;
 
     private ShapeType selectedShape = ShapeType.LINE;
-    private final JRadioButton drawButton, editButton;
     private OperationType selectedOperation = OperationType.DRAW;
-
-    private final JTextField rField, gField, bField;
-    private final JPanel colorPreview;
     private Color currentColor = Color.BLACK;
-
-    private final JButton saveButton, loadButton, clearButton;
 
     public VectorGraphicsEditor() {
         setLayout(new BorderLayout());
@@ -55,94 +51,20 @@ class VectorGraphicsEditor extends JPanel {
         drawPanel = new DrawPanel();
         add(drawPanel, BorderLayout.CENTER);
 
-        //Shape selection buttons
-        JPanel controlPanel = new JPanel();
-        JRadioButton lineButton, rectButton, circleButton;
-        lineButton = new JRadioButton("Line", true);
-        rectButton = new JRadioButton("Rectangle");
-        circleButton = new JRadioButton("Circle");
-        ButtonGroup shapeGroup = new ButtonGroup();
-        shapeGroup.add(lineButton);
-        shapeGroup.add(rectButton);
-        shapeGroup.add(circleButton);
-
-        lineButton.addActionListener(e -> selectedShape = ShapeType.LINE);
-        rectButton.addActionListener(e -> selectedShape = ShapeType.RECTANGLE);
-        circleButton.addActionListener(e -> selectedShape = ShapeType.CIRCLE);
-        
-        controlPanel.add(lineButton);
-        controlPanel.add(rectButton);
-        controlPanel.add(circleButton);
-
-        
-
-        // Color selection fields
-        rField = new JTextField("0", 3);
-        gField = new JTextField("0", 3);
-        bField = new JTextField("0", 3);
-        JButton colorButton = new JButton("Set Color");
-        colorButton.addActionListener(e -> setColor());
-
-        controlPanel.add(new JLabel("R:"));
-        controlPanel.add(rField);
-        controlPanel.add(new JLabel("G:"));
-        controlPanel.add(gField);
-        controlPanel.add(new JLabel("B:"));
-        controlPanel.add(bField);
-        controlPanel.add(colorButton);
-
-        // Color preview
-        colorPreview = new JPanel();
-        colorPreview.setPreferredSize(new Dimension(50, 20));
-        colorPreview.setBackground(currentColor);
-        colorPreview.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        controlPanel.add(colorPreview);
-
-        
-        add(controlPanel, BorderLayout.SOUTH);
-
-        // Operation Panel
-        JPanel operationPanel = new JPanel();
-
-        // Operation selection buttons
-        operationPanel.add(new JLabel("Mode:"));
-
-        drawButton = new JRadioButton("Draw", true);
-        editButton = new JRadioButton("Edit");
-        ButtonGroup operationGroup = new ButtonGroup();
-        operationGroup.add(drawButton);
-        operationGroup.add(editButton);
-
-        drawButton.addActionListener(e -> selectedOperation = OperationType.DRAW);
-        editButton.addActionListener(e -> selectedOperation = OperationType.EDIT);
-
-        operationPanel.add(drawButton);
-        operationPanel.add(editButton);
-
-        // Spacer
-        operationPanel.add(Box.createHorizontalStrut(200));
-
-        // Save, load, and clear buttons
-        saveButton = new JButton("Save");
-        saveButton.addActionListener(e -> drawPanel.saveShapes());
-        loadButton = new JButton("Load");
-        loadButton.addActionListener(e -> drawPanel.loadShapes());
-        clearButton = new JButton("Clear");
-        clearButton.addActionListener(e -> drawPanel.clear());
-
-        operationPanel.add(saveButton);
-        operationPanel.add(loadButton);
-        operationPanel.add(clearButton);
-
-
+        // Operation panel
+        operationPanel = new OperationPanel();
         add(operationPanel, BorderLayout.NORTH);
+
+        // Control panel
+        controlPanel = new ControlPanel();
+        add(controlPanel, BorderLayout.SOUTH);
     }
 
-    private void setColor() {
+    public void setColor() {
         try {
-            int r = Integer.parseInt(rField.getText());
-            int g = Integer.parseInt(gField.getText());
-            int b = Integer.parseInt(bField.getText());
+            int r = Integer.parseInt(controlPanel.rField.getText());
+            int g = Integer.parseInt(controlPanel.gField.getText());
+            int b = Integer.parseInt(controlPanel.bField.getText());
 
             // // Clamp values to 0-255
             // r = Math.max(0, Math.min(255, r));
@@ -150,7 +72,7 @@ class VectorGraphicsEditor extends JPanel {
             // b = Math.max(0, Math.min(255, b));
             
             currentColor = new Color(r, g, b);
-            colorPreview.setBackground(currentColor); // Update preview
+            controlPanel.colorPreview.setBackground(currentColor); // Update preview
         } catch (Exception e) { 
             // Values are not integers or out of range
             JOptionPane.showMessageDialog(this, "Invalid color values. Please enter integers between 0 and 255.");
@@ -334,6 +256,91 @@ class VectorGraphicsEditor extends JPanel {
             repaint();
         }
     }
+
+    private class ControlPanel extends JPanel {
+        private JTextField rField, gField, bField;
+        private JPanel colorPreview;
+
+        public ControlPanel() {
+            //Shape selection buttons
+            JRadioButton lineButton, rectButton, circleButton;
+            lineButton = new JRadioButton("Line", true);
+            rectButton = new JRadioButton("Rectangle");
+            circleButton = new JRadioButton("Circle");
+            ButtonGroup shapeGroup = new ButtonGroup();
+            shapeGroup.add(lineButton);
+            shapeGroup.add(rectButton);
+            shapeGroup.add(circleButton);
+
+            lineButton.addActionListener(e -> selectedShape = ShapeType.LINE);
+            rectButton.addActionListener(e -> selectedShape = ShapeType.RECTANGLE);
+            circleButton.addActionListener(e -> selectedShape = ShapeType.CIRCLE);
+            
+            this.add(lineButton);
+            this.add(rectButton);
+            this.add(circleButton);
+
+            // Color selection fields
+            rField = new JTextField("0", 3);
+            gField = new JTextField("0", 3);
+            bField = new JTextField("0", 3);
+            JButton colorButton = new JButton("Set Color");
+            colorButton.addActionListener(e -> setColor());
+
+            this.add(new JLabel("R:"));
+            this.add(rField);
+            this.add(new JLabel("G:"));
+            this.add(gField);
+            this.add(new JLabel("B:"));
+            this.add(bField);
+            this.add(colorButton);
+
+            // Color preview
+            colorPreview = new JPanel();
+            colorPreview.setPreferredSize(new Dimension(50, 20));
+            colorPreview.setBackground(currentColor);
+            colorPreview.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+            this.add(colorPreview);
+        }
+    }
+
+    private class OperationPanel extends JPanel {
+        private final JButton saveButton, loadButton, clearButton;
+        private final JRadioButton drawButton, editButton;
+
+        public OperationPanel() {
+            this.add(new JLabel("Mode:"));
+
+            drawButton = new JRadioButton("Draw", true);
+            editButton = new JRadioButton("Edit");
+            ButtonGroup operationGroup = new ButtonGroup();
+            operationGroup.add(drawButton);
+            operationGroup.add(editButton);
+
+            drawButton.addActionListener(e -> selectedOperation = OperationType.DRAW);
+            editButton.addActionListener(e -> selectedOperation = OperationType.EDIT);
+
+            this.add(drawButton);
+            this.add(editButton);
+
+            // Spacer
+            this.add(Box.createHorizontalStrut(200));
+
+            // Save, load, and clear buttons
+            saveButton = new JButton("Save");
+            saveButton.addActionListener(e -> drawPanel.saveShapes());
+            loadButton = new JButton("Load");
+            loadButton.addActionListener(e -> drawPanel.loadShapes());
+            clearButton = new JButton("Clear");
+            clearButton.addActionListener(e -> drawPanel.clear());
+
+            this.add(saveButton);
+            this.add(loadButton);
+            this.add(clearButton);
+        }
+    }
+
+
 }
 
 interface Shape {
