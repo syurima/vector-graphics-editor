@@ -38,12 +38,12 @@ class VectorGraphicsEditorWindow extends JFrame {
 class VectorGraphicsEditor extends JPanel {
     private final DrawPanel drawPanel;
 
-    private final JRadioButton lineButton, rectButton, circleButton;
     private ShapeType selectedShape = ShapeType.LINE;
     private final JRadioButton drawButton, editButton;
     private OperationType selectedOperation = OperationType.DRAW;
 
     private final JTextField rField, gField, bField;
+    private final JPanel colorPreview;
     private Color currentColor = Color.BLACK;
 
     private final JButton saveButton, loadButton, clearButton;
@@ -57,6 +57,7 @@ class VectorGraphicsEditor extends JPanel {
 
         //Shape selection buttons
         JPanel controlPanel = new JPanel();
+        JRadioButton lineButton, rectButton, circleButton;
         lineButton = new JRadioButton("Line", true);
         rectButton = new JRadioButton("Rectangle");
         circleButton = new JRadioButton("Circle");
@@ -89,6 +90,13 @@ class VectorGraphicsEditor extends JPanel {
         controlPanel.add(new JLabel("B:"));
         controlPanel.add(bField);
         controlPanel.add(colorButton);
+
+        // Color preview
+        colorPreview = new JPanel();
+        colorPreview.setPreferredSize(new Dimension(50, 20));
+        colorPreview.setBackground(currentColor);
+        colorPreview.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        controlPanel.add(colorPreview);
 
         
         add(controlPanel, BorderLayout.SOUTH);
@@ -142,6 +150,7 @@ class VectorGraphicsEditor extends JPanel {
             // b = Math.max(0, Math.min(255, b));
             
             currentColor = new Color(r, g, b);
+            colorPreview.setBackground(currentColor); // Update preview
         } catch (Exception e) { 
             // Values are not integers or out of range
             JOptionPane.showMessageDialog(this, "Invalid color values. Please enter integers between 0 and 255.");
