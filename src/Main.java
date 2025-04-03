@@ -73,18 +73,7 @@ class VectorGraphicsEditor extends JPanel {
         controlPanel.add(rectButton);
         controlPanel.add(circleButton);
 
-        // Operation selection buttons
-        drawButton = new JRadioButton("Draw", true);
-        editButton = new JRadioButton("Edit");
-        ButtonGroup operationGroup = new ButtonGroup();
-        operationGroup.add(drawButton);
-        operationGroup.add(editButton);
-
-        drawButton.addActionListener(e -> selectedOperation = OperationType.DRAW);
-        editButton.addActionListener(e -> selectedOperation = OperationType.EDIT);
-
-        controlPanel.add(drawButton);
-        controlPanel.add(editButton);
+        
 
         // Color selection fields
         rField = new JTextField("0", 3);
@@ -101,6 +90,30 @@ class VectorGraphicsEditor extends JPanel {
         controlPanel.add(bField);
         controlPanel.add(colorButton);
 
+        
+        add(controlPanel, BorderLayout.SOUTH);
+
+        // Operation Panel
+        JPanel operationPanel = new JPanel();
+
+        // Operation selection buttons
+        operationPanel.add(new JLabel("Mode:"));
+
+        drawButton = new JRadioButton("Draw", true);
+        editButton = new JRadioButton("Edit");
+        ButtonGroup operationGroup = new ButtonGroup();
+        operationGroup.add(drawButton);
+        operationGroup.add(editButton);
+
+        drawButton.addActionListener(e -> selectedOperation = OperationType.DRAW);
+        editButton.addActionListener(e -> selectedOperation = OperationType.EDIT);
+
+        operationPanel.add(drawButton);
+        operationPanel.add(editButton);
+
+        // Spacer
+        operationPanel.add(Box.createHorizontalStrut(200));
+
         // Save, load, and clear buttons
         saveButton = new JButton("Save");
         saveButton.addActionListener(e -> drawPanel.saveShapes());
@@ -109,11 +122,12 @@ class VectorGraphicsEditor extends JPanel {
         clearButton = new JButton("Clear");
         clearButton.addActionListener(e -> drawPanel.clear());
 
-        controlPanel.add(saveButton);
-        controlPanel.add(loadButton);
-        controlPanel.add(clearButton);
+        operationPanel.add(saveButton);
+        operationPanel.add(loadButton);
+        operationPanel.add(clearButton);
 
-        add(controlPanel, BorderLayout.SOUTH);
+
+        add(operationPanel, BorderLayout.NORTH);
     }
 
     private void setColor() {
