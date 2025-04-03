@@ -13,7 +13,7 @@ enum ShapeType {
 }
 
 enum OperationType {
-    DRAW, MOVE, DELETE
+    DRAW, EDIT
 }
 
 public class Main {
@@ -118,12 +118,35 @@ class VectorGraphicsEditor extends JPanel {
         private final ArrayList<Shape> shapes = new ArrayList<>();
         private Shape currentShape = null; // Shape being drawn dynamically
         private Point startPoint;
+
+        private static final int CLICK_RADIUS = 10;
     
         public DrawPanel() {
             addMouseListener(new MouseAdapter() {
                 @Override
                 public void mousePressed(MouseEvent e) {
-                    startPoint = e.getPoint();
+                    if (SwingUtilities.isRightMouseButton(e)) {
+                        Point clickPoint = e.getPoint();
+                        Shape shapeToRemove = null;
+        
+                        // Find a shape that is in range of the click point (deletes one at a time)
+                        for (Shape shape : shapes) {
+                            Point center = shape.getCenter();
+                            if (center.distance(clickPoint) <= CLICK_RADIUS) {
+                                shapeToRemove = shape;
+                                break;
+                            }
+                        }
+                        
+                        // If a shape was found, remove it
+                        if (shapeToRemove != null) {
+                            shapes.remove(shapeToRemove);
+                            repaint();
+                        }
+                    } 
+                    else if (SwingUtilities.isLeftMouseButton(e)) {
+                        startPoint = e.getPoint();
+                    }
                 }
     
                 @Override
@@ -142,6 +165,10 @@ class VectorGraphicsEditor extends JPanel {
                     Graphics g = getGraphics();
                     g.setXORMode(getBackground()); // XOR mode for dynamic drawing (better visibility)
                     g.setColor(currentColor);
+
+                    if (currentShape != null) {
+                        currentShape.draw(g); // Erase the previous shape
+                    }
                 
                     Point endPoint = e.getPoint();
                     switch (selectedShape) {
@@ -158,7 +185,7 @@ class VectorGraphicsEditor extends JPanel {
 
                     currentShape.draw(g);
                 
-                    g.dispose(); // Get rid of the temporary shape
+                    g.dispose(); // Dispose of the graphics context
                 }
             });
         }
