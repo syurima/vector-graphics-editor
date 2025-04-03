@@ -283,30 +283,48 @@ class VectorGraphicsEditor extends JPanel {
         }
 
         public void saveShapes() {
-            try (PrintWriter writer = new PrintWriter(new File("shapes.txt"))) {
-                for (Shape shape : shapes) {
-                    writer.println(shape.toString());
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Save Shapes");
+            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("txt", "txt"));
+            int userSelection = fileChooser.showSaveDialog(this);
+
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File fileToSave = fileChooser.getSelectedFile();
+                try (PrintWriter writer = new PrintWriter(fileToSave)) {
+                    for (Shape shape : shapes) {
+                        writer.println(shape.toString());
+                    }
+                    JOptionPane.showMessageDialog(this, "Shapes saved successfully!");
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(this, "Error saving file: " + e.getMessage());
                 }
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(this, "Error saving file");
             }
         }
     
         public void loadShapes() {
-            shapes.clear(); // Clear existing shapes before loading new ones
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Load Canvas");
+            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("txt", "txt"));
+            int userSelection = fileChooser.showOpenDialog(this);
 
-            try (BufferedReader reader = new BufferedReader(new FileReader("shapes.txt"))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    Shape shape = Shape.fromString(line);
-                    if (shape != null) {
-                        shapes.add(shape);
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File fileToLoad = fileChooser.getSelectedFile();
+                shapes.clear(); // Clear existing shapes before loading new ones
+
+                try (BufferedReader reader = new BufferedReader(new FileReader(fileToLoad))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        Shape shape = Shape.fromString(line);
+                        if (shape != null) {
+                            shapes.add(shape);
+                        }
                     }
+                    JOptionPane.showMessageDialog(this, "Canvas loaded successfully!");
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(this, "Error loading file: " + e.getMessage());
                 }
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(this, "Error loading file");
+                repaint();
             }
-            repaint();
         }
 
         public void exportAsImage() {
@@ -321,7 +339,7 @@ class VectorGraphicsEditor extends JPanel {
             // Prompt the user to select a file location
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Export as Image");
-            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("jpg"));
+            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("jpg", "jpg"));
             int userSelection = fileChooser.showSaveDialog(this);
         
             if (userSelection == JFileChooser.APPROVE_OPTION) {
