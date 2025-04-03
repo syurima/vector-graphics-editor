@@ -1,11 +1,15 @@
 import java.awt.*;
+
 import javax.swing.*;
 
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.io.PrintWriter;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.io.*;
+import javax.imageio.*;
+
 
 
 enum ShapeType {
@@ -79,7 +83,8 @@ class VectorGraphicsEditor extends JPanel {
         }
     }
 
-    private class DrawPanel extends JPanel {
+    private class DrawPanel extends JPanel 
+    {
         private final ArrayList<Shape> shapes = new ArrayList<>();
         private Shape currentShape = null; // Shape being drawn/edited dynamically
         private Point selectedLineEnd = null;
@@ -89,6 +94,7 @@ class VectorGraphicsEditor extends JPanel {
     
         public DrawPanel() {
             addMouseListener(new MouseAdapter() {
+
                 // mouse pressed event
                 @Override
                 public void mousePressed(MouseEvent e) {
@@ -121,7 +127,9 @@ class VectorGraphicsEditor extends JPanel {
                     switch (selectedOperation) {
                         case DRAW:
                             if (SwingUtilities.isLeftMouseButton(e)) {
-                                shapes.add(currentShape);
+                                if (currentShape != null) {
+                                    shapes.add(currentShape); // Add the finalized shape to the list
+                                }
                                 currentShape = null;
                             }
                             break;
@@ -137,6 +145,7 @@ class VectorGraphicsEditor extends JPanel {
             });
     
             addMouseMotionListener(new MouseMotionAdapter() {
+                // mouse dragged event
                 @Override
                 public void mouseDragged(MouseEvent e) {
                     switch(selectedOperation) {
@@ -240,22 +249,21 @@ class VectorGraphicsEditor extends JPanel {
             for (Shape shape : shapes) {
                 Point center = shape.getCenter();
                 if (center.distance(lastClickPoint) <= CLICK_RADIUS) {
-                    currentShape = shape;
+                    currentShape = shape; // Shape selected
                     return;
                 }
                 else if (shape instanceof Line) {
                     Line line = (Line) shape;
                     if (line.getStart().distance(lastClickPoint) <= CLICK_RADIUS) {
                         currentShape = line;
-                        selectedLineEnd = line.getStart(); // Wybrano początek linii
+                        selectedLineEnd = line.getStart(); // Line start selected
                         return;
                     } else if (line.getEnd().distance(lastClickPoint) <= CLICK_RADIUS) {
                         currentShape = line;
-                        selectedLineEnd = line.getEnd(); // Wybrano koniec linii
+                        selectedLineEnd = line.getEnd(); // Line end selected
                         return;
                     }
                 }
-                //print
             }
             currentShape = null;
             selectedLineEnd = null;
@@ -267,6 +275,11 @@ class VectorGraphicsEditor extends JPanel {
             for (Shape shape : shapes) {
                 shape.draw(g); // Draw all finalized shapes
             }
+        }
+
+        public void clear() {
+            shapes.clear();
+            repaint();
         }
 
         public void saveShapes() {
@@ -296,9 +309,36 @@ class VectorGraphicsEditor extends JPanel {
             repaint();
         }
 
-        public void clear() {
-            shapes.clear();
-            repaint();
+        public void exportAsImage() {
+            // Create a BufferedImage with the same dimensions as the DrawPanel
+            BufferedImage image = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
+            Graphics2D g2d = image.createGraphics();
+        
+            // Paint the DrawPanel's contents onto the BufferedImage
+            this.paint(g2d);
+            g2d.dispose();
+        
+            // Prompt the user to select a file location
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Export as Image");
+            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("jpg"));
+            int userSelection = fileChooser.showSaveDialog(this);
+        
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File fileToSave = fileChooser.getSelectedFile();
+                // Ensure the file has a .jpg extension
+                if (!fileToSave.getName().toLowerCase().endsWith(".jpg")) {
+                    fileToSave = new File(fileToSave.getAbsolutePath() + ".jpg");
+                }
+        
+                try {
+                    // Write the BufferedImage to the file
+                    ImageIO.write(image, "jpg", fileToSave);
+                    JOptionPane.showMessageDialog(this, "Image exported successfully!");
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(this, "Error exporting image: " + e.getMessage());
+                }
+            }
         }
     }
 
@@ -350,7 +390,7 @@ class VectorGraphicsEditor extends JPanel {
     }
 
     private class OperationPanel extends JPanel {
-        private final JButton saveButton, loadButton, clearButton;
+        private final JButton exportButton, saveButton, loadButton, clearButton;
         private final JRadioButton drawButton, editButton;
 
         public OperationPanel() {
@@ -372,6 +412,8 @@ class VectorGraphicsEditor extends JPanel {
             this.add(Box.createHorizontalStrut(200));
 
             // Save, load, and clear buttons
+            exportButton = new JButton("Export");
+            exportButton.addActionListener(e -> drawPanel.exportAsImage());
             saveButton = new JButton("Save");
             saveButton.addActionListener(e -> drawPanel.saveShapes());
             loadButton = new JButton("Load");
@@ -379,13 +421,12 @@ class VectorGraphicsEditor extends JPanel {
             clearButton = new JButton("Clear");
             clearButton.addActionListener(e -> drawPanel.clear());
 
+            this.add(exportButton);
             this.add(saveButton);
             this.add(loadButton);
             this.add(clearButton);
         }
     }
-
-
 }
 
 interface Shape {
