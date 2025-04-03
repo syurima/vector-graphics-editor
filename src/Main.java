@@ -51,6 +51,7 @@ class VectorGraphicsEditor extends JPanel {
     public VectorGraphicsEditor() {
         setLayout(new BorderLayout());
 
+        // Draw panel
         drawPanel = new DrawPanel();
         add(drawPanel, BorderLayout.CENTER);
 
@@ -127,67 +128,64 @@ class VectorGraphicsEditor extends JPanel {
             // b = Math.max(0, Math.min(255, b));
             
             currentColor = new Color(r, g, b);
-        } catch (Exception e) { // Values are not integers or out of range
+        } catch (Exception e) { 
+            // Values are not integers or out of range
             JOptionPane.showMessageDialog(this, "Invalid color values. Please enter integers between 0 and 255.");
         }
     }
 
     private class DrawPanel extends JPanel {
         private final ArrayList<Shape> shapes = new ArrayList<>();
-        private Shape currentShape = null; // Shape being drawn dynamically
+        private Shape currentShape = null; // Shape being drawn/edited dynamically
         private Point lastClickPoint;
 
         private static final int CLICK_RADIUS = 40;
     
         public DrawPanel() {
             addMouseListener(new MouseAdapter() {
+                // mouse pressed event
                 @Override
                 public void mousePressed(MouseEvent e) {
-                    Point clickPoint = e.getPoint();
-                    lastClickPoint = clickPoint; // Store clicked point
+                    lastClickPoint = e.getPoint(); // Store clicked point
 
-                    // Find a shape that is in range of the click point (one at a time)
-                    for (Shape shape : shapes) {
-                        Point center = shape.getCenter();
-                        if (center.distance(lastClickPoint) <= CLICK_RADIUS) {
-                            currentShape = shape;
-                            break;
-                        }
-                    }
-
-                    if (SwingUtilities.isRightMouseButton(e)) { // Right-click to delete a shape
+                    
+                    if (SwingUtilities.isRightMouseButton(e)) { // Right-click in any mode to delete a shape
+                        selectShape();
                         // If a shape was found, remove it
                         if (currentShape != null) {
                             shapes.remove(currentShape);
-                            currentShape = null; // Reset the current shape
+                            currentShape = null;
                             repaint();
                         }
                     } 
                     else if (SwingUtilities.isLeftMouseButton(e)) { // Left-click 
-                        if (selectedOperation == OperationType.DRAW) { 
-                            currentShape = null;
+                        switch (selectedOperation) {
+                            case DRAW:
+                                break;
+                            case EDIT:
+                                selectShape(); // Select a shape to edit
+                                break;
                         }
                     }
-
                 }
-    
+                
+                // mouse released event
                 @Override
                 public void mouseReleased(MouseEvent e) {
                     switch (selectedOperation) {
                         case DRAW:
-                            if (SwingUtilities.isLeftMouseButton(e)) { // Finalize the shape
-                                shapes.add(currentShape); // Add the shape to the list
-                                currentShape = null; // Reset the current shape
+                            if (SwingUtilities.isLeftMouseButton(e)) {
+                                shapes.add(currentShape);
+                                currentShape = null;
                             }
                             break;
                         case EDIT:
                             if (SwingUtilities.isLeftMouseButton(e)) {
-                                currentShape = null; // Reset the current shape
+                                currentShape = null;
                             }
                             break;
                     }
                     repaint(); // Repaint the panel to show the finalized shape
-                    currentShape = null;
                 }
             });
     
@@ -235,7 +233,7 @@ class VectorGraphicsEditor extends JPanel {
 
                 currentShape.draw(g);
             
-                g.dispose(); // Dispose of the graphics context
+                g.dispose();
         };
 
         // Dynamic display when moving shapes
@@ -248,29 +246,36 @@ class VectorGraphicsEditor extends JPanel {
 
             
             if (currentShape != null) {
-                currentShape.draw(g); // Erase the previous shape
+                currentShape.draw(g); // Erase the previous shape by drawing it in XOR mode
 
                 int dx = clickPoint.x - lastClickPoint.x;
                 int dy = clickPoint.y - lastClickPoint.y;
+                lastClickPoint = clickPoint;
 
-                currentShape.move(dx, dy); // Move the shape by dx and dy
-                lastClickPoint = clickPoint; // Update the last clicked point
-
-                currentShape.draw(g); // Draw the shape at the new position
+                //move the shape and draw it at the new position
+                currentShape.move(dx, dy);
+                currentShape.draw(g);
             }
         
-            g.dispose(); // Dispose of the graphics context
+            g.dispose();
         };
+        
+        // Try to find a shape that is in range of the click point (selects one at a time)
+        private void selectShape() {
+            for (Shape shape : shapes) {
+                Point center = shape.getCenter();
+                if (center.distance(lastClickPoint) <= CLICK_RADIUS) {
+                    currentShape = shape;
+                    break;
+                }
+            }
+        }
 
         @Override
         protected void paintComponent(Graphics g) {
-            // turn off XOR mode
             super.paintComponent(g);
             for (Shape shape : shapes) {
                 shape.draw(g); // Draw all finalized shapes
-            }
-            if (currentShape != null) {
-                currentShape.draw(g); // Draw the shape being dynamically drawn
             }
         }
 
@@ -339,8 +344,8 @@ interface Shape {
             return null; // Return null if the string is not a valid shape representation
         }
     }
-    Point getCenter();                      // Get the center point of the shape
-    public void move(int dx, int dy);       // Move the shape by dx and dy
+    Point getCenter();
+    public void move(int dx, int dy);
 }
 
 class Line implements Shape {
