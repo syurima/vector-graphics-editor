@@ -164,7 +164,9 @@ class VectorGraphicsEditor extends JPanel {
                         }
                     } 
                     else if (SwingUtilities.isLeftMouseButton(e)) { // Left-click 
-                        // Do nothing, just set the last clicked point
+                        if (selectedOperation == OperationType.DRAW) { 
+                            currentShape = null;
+                        }
                     }
 
                 }
@@ -203,7 +205,6 @@ class VectorGraphicsEditor extends JPanel {
                 }
             });
 
-            
         }
 
         // OPERATIONS
