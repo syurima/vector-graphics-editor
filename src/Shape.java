@@ -11,19 +11,23 @@ interface Shape {
             String shapeType = s_split[0];
             int x = Integer.parseInt(s_split[1]);
             int y = Integer.parseInt(s_split[2]);
-            String color = s_split[s_split.length - 1];
+            // 3 last vals are RGB values
+            int red = Integer.parseInt(s_split[s_split.length - 3]);
+            int green = Integer.parseInt(s_split[s_split.length - 2]);
+            int blue = Integer.parseInt(s_split[s_split.length - 1]);
+            Color color = new Color(red, green, blue);
             switch (shapeType) {
                 case "LINE":
                     Point start = new Point(x, y);
                     Point end = new Point(Integer.parseInt(s_split[3]), Integer.parseInt(s_split[4]));
-                    return new Line(start, end, new Color(Integer.parseInt(color)));
+                    return new Line(start, end, color);
                 case "RECTANGLE":
                     int width = Integer.parseInt(s_split[3]);
                     int height = Integer.parseInt(s_split[4]);
-                    return new Rect(new Point(x, y), new Point(x + width, y + height), new Color(Integer.parseInt(color)));
+                    return new Rect(new Point(x, y), new Point(x + width, y + height), color);
                 case "CIRCLE":
                     int radius = Integer.parseInt(s_split[3]);
-                    return new Circle(new Point(x, y), radius, new Color(Integer.parseInt(color)));
+                    return new Circle(new Point(x, y), radius, color);
                 default:
                     return null; // Unknown shape type
             }
@@ -56,7 +60,11 @@ class Line implements Shape {
 
     @Override
     public String toString() {
-        return "LINE " + start.x + " " + start.y + " " + end.x + " " + end.y + " " + color.getRGB();
+        int red = color.getRed();
+        int green = color.getGreen();
+        int blue = color.getBlue();
+        //return "LINE " + start.x + " " + start.y + " " + end.x + " " + end.y + " " + color.getRGB();
+        return "LINE " + start.x + " " + start.y + " " + end.x + " " + end.y + " " + red + " " + green + " " + blue;
     }
     @Override
     public Point getCenter() {
@@ -103,7 +111,10 @@ class Rect implements Shape {
 
     @Override
     public String toString() {
-        return "RECTANGLE " + rect.x + " " + rect.y + " " + rect.width + " " + rect.height + " " + color.getRGB();
+        int red = color.getRed();
+        int green = color.getGreen();
+        int blue = color.getBlue();
+        return "RECTANGLE " + rect.x + " " + rect.y + " " + rect.width + " " + rect.height + " " + red + " " + green + " " + blue;
     }
     @Override
     public Point getCenter() {
@@ -143,7 +154,10 @@ class Circle implements Shape {
 
     @Override
     public String toString() {
-        return "CIRCLE " + (center.x) + " " + (center.y) + " " + radius + " " + color.getRGB();
+        int red = color.getRed();
+        int green = color.getGreen();
+        int blue = color.getBlue();
+        return "CIRCLE " + (center.x) + " " + (center.y) + " " + radius + " " + red + " " + green + " " + blue;
     }
 
     @Override
