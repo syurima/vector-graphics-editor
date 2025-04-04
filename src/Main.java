@@ -269,6 +269,11 @@ class VectorGraphicsEditor extends JPanel {
 
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
+                // Ensure the file has a .txt extension
+                if (!fileToSave.getName().toLowerCase().endsWith(".txt")) {
+                    fileToSave = new File(fileToSave.getAbsolutePath() + ".txt");
+                }
+
                 try (PrintWriter writer = new PrintWriter(fileToSave)) {
                     for (Shape shape : shapes) {
                         writer.println(shape.toString());
