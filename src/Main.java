@@ -371,8 +371,7 @@ class VectorGraphicsEditor extends JPanel {
             rField = new JTextField("0", 3);
             gField = new JTextField("0", 3);
             bField = new JTextField("0", 3);
-            JButton colorButton = new JButton("Set Color");
-            colorButton.addActionListener(e -> setColor());
+            
 
             this.add(new JLabel("R:"));
             this.add(rField);
@@ -380,7 +379,14 @@ class VectorGraphicsEditor extends JPanel {
             this.add(gField);
             this.add(new JLabel("B:"));
             this.add(bField);
-            this.add(colorButton);
+
+            // JButton colorButton = new JButton("Set Color");
+            // colorButton.addActionListener(e -> setColor());
+            // this.add(colorButton);
+
+            rField.addActionListener(e -> setColor());
+            gField.addActionListener(e -> setColor());
+            bField.addActionListener(e -> setColor());
 
             // Color preview
             colorPreview = new JPanel();
