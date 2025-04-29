@@ -54,6 +54,7 @@ class Line implements Shape {
     
     @Override
     public void draw(Graphics g) {
+        ((Graphics2D) g).setStroke(new BasicStroke(2));  // Set line weight
         g.setColor(color);
         g.drawLine(start.x, start.y, end.x, end.y);
     }

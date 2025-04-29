@@ -42,8 +42,8 @@ class VectorGraphicsEditor extends JPanel {
     private final OperationPanel operationPanel;
     private final ControlPanel controlPanel;
 
-    private ShapeType selectedShape = ShapeType.LINE;
-    private OperationType selectedOperation = OperationType.DRAW;
+    private ShapeType currentShape = ShapeType.LINE;
+    private OperationType currentOperation = OperationType.DRAW;
     private Color currentColor = Color.BLACK;
 
     public VectorGraphicsEditor() {
@@ -65,7 +65,7 @@ class VectorGraphicsEditor extends JPanel {
     private class DrawPanel extends JPanel 
     {
         private final ArrayList<Shape> shapes = new ArrayList<>();
-        private Shape currentShape = null; // Shape being drawn/edited dynamically
+        private Shape selectedShape = null; // Shape being drawn/edited dynamically
         private Point selectedLineEnd = null;
         private Point lastClickPoint;
 
@@ -83,14 +83,14 @@ class VectorGraphicsEditor extends JPanel {
                     if (SwingUtilities.isRightMouseButton(e)) { // Right-click in any mode to delete a shape
                         selectShape();
                         // If a shape was found, remove it
-                        if (currentShape != null) {
-                            shapes.remove(currentShape);
-                            currentShape = null;
+                        if (selectedShape != null) {
+                            shapes.remove(selectedShape);
+                            selectedShape = null;
                             repaint();
                         }
                     } 
                     else if (SwingUtilities.isLeftMouseButton(e)) { // Left-click 
-                        switch (selectedOperation) {
+                        switch (currentOperation) {
                             case DRAW:
                                 break;
                             case EDIT:
@@ -103,18 +103,18 @@ class VectorGraphicsEditor extends JPanel {
                 // mouse released event
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    switch (selectedOperation) {
+                    switch (currentOperation) {
                         case DRAW:
                             if (SwingUtilities.isLeftMouseButton(e)) {
-                                if (currentShape != null) {
-                                    shapes.add(currentShape); // Add the finalized shape to the list
+                                if (selectedShape != null) {
+                                    shapes.add(selectedShape); // Add the finalized shape to the list
                                 }
-                                currentShape = null;
+                                selectedShape = null;
                             }
                             break;
                         case EDIT:
                             if (SwingUtilities.isLeftMouseButton(e)) {
-                                currentShape = null;
+                                selectedShape = null;
                                 selectedLineEnd = null;
                             }
                             break;
@@ -127,13 +127,13 @@ class VectorGraphicsEditor extends JPanel {
                 // mouse dragged event
                 @Override
                 public void mouseDragged(MouseEvent e) {
-                    switch(selectedOperation) {
+                    switch(currentOperation) {
                         case DRAW:
                             if (SwingUtilities.isLeftMouseButton(e)) {dynamicDrawing(e);} // Draw the shape dynamically
                             break;
                         case EDIT:
                             if (SwingUtilities.isLeftMouseButton(e)) {
-                                if (currentShape instanceof Line && selectedLineEnd != null) {
+                                if (selectedShape instanceof Line && selectedLineEnd != null) {
                                     dynamicLineEndEditing(e); // Move the selected line end
                                 } else {
                                     dynamicMoving(e); // Move the selected shape
@@ -151,30 +151,30 @@ class VectorGraphicsEditor extends JPanel {
         // Dynamic drawing of new shapes when mouse is dragged
         private void dynamicDrawing(MouseEvent e){
             Graphics g = getGraphics();
-                g.setXORMode(getBackground()); // XOR mode for dynamic drawing (better visibility)
-                g.setColor(currentColor);
+            g.setXORMode(getBackground()); // XOR mode for dynamic drawing (better visibility)
+            g.setColor(currentColor);
 
-                if (currentShape != null) {
-                    currentShape.draw(g); // Erase the previous shape by drawing it in XOR mode
-                }
-                Point startPoint = lastClickPoint;
-                Point endPoint = e.getPoint();
+            if (selectedShape != null) {
+                selectedShape.draw(g); // Erase the previous shape by drawing it in XOR mode
+            }
+            Point startPoint = lastClickPoint;
+            Point endPoint = e.getPoint();
 
-                switch (selectedShape) {
-                    case LINE:
-                        currentShape = new Line(startPoint, endPoint, currentColor);
-                        break;
-                    case RECTANGLE:
-                        currentShape = new Rect(startPoint, endPoint, currentColor);
-                        break;
-                    case CIRCLE:
-                        currentShape = new Circle(startPoint, endPoint, currentColor);
-                        break;
-                }
+            switch (currentShape) {
+                case LINE:
+                    selectedShape = new Line(startPoint, endPoint, currentColor);
+                    break;
+                case RECTANGLE:
+                    selectedShape = new Rect(startPoint, endPoint, currentColor);
+                    break;
+                case CIRCLE:
+                    selectedShape = new Circle(startPoint, endPoint, currentColor);
+                    break;
+            }
 
-                currentShape.draw(g);
-            
-                g.dispose();
+            selectedShape.draw(g);
+        
+            g.dispose();
         };
 
         // Dynamic display when moving shapes
@@ -186,16 +186,16 @@ class VectorGraphicsEditor extends JPanel {
             g.setColor(currentColor);
 
             
-            if (currentShape != null) {
-                currentShape.draw(g); // Erase the previous shape by drawing it in XOR mode
+            if (selectedShape != null) {
+                selectedShape.draw(g); // Erase the previous shape by drawing it in XOR mode
 
                 int dx = clickPoint.x - lastClickPoint.x;
                 int dy = clickPoint.y - lastClickPoint.y;
                 lastClickPoint = clickPoint;
 
                 //move the shape and draw it at the new position
-                currentShape.move(dx, dy);
-                currentShape.draw(g);
+                selectedShape.move(dx, dy);
+                selectedShape.draw(g);
             }
         
             g.dispose();
@@ -206,19 +206,19 @@ class VectorGraphicsEditor extends JPanel {
             g.setXORMode(getBackground()); // XOR mode for dynamic drawing (better visibility)
             g.setColor(currentColor);
         
-            if (currentShape != null) {
-                currentShape.draw(g); // Erase the previous shape by drawing it in XOR mode
+            if (selectedShape != null) {
+                selectedShape.draw(g); // Erase the previous shape by drawing it in XOR mode
             }
         
             // Update the position of the selected line end
             selectedLineEnd.setLocation(e.getPoint());
-            if (currentShape instanceof Line) {
-                Line line = (Line) currentShape;
+            if (selectedShape instanceof Line) {
+                Line line = (Line) selectedShape;
                 line.recalculateCenter();
             }
         
             // draw the updated line
-            currentShape.draw(g);
+            selectedShape.draw(g);
         
             g.dispose();
         }
@@ -228,23 +228,23 @@ class VectorGraphicsEditor extends JPanel {
             for (Shape shape : shapes) {
                 Point center = shape.getCenter();
                 if (center.distance(lastClickPoint) <= CLICK_RADIUS) {
-                    currentShape = shape; // Shape selected
+                    selectedShape = shape; // Shape selected
                     return;
                 }
                 else if (shape instanceof Line) {
                     Line line = (Line) shape;
                     if (line.getStart().distance(lastClickPoint) <= CLICK_RADIUS) {
-                        currentShape = line;
+                        selectedShape = line;
                         selectedLineEnd = line.getStart(); // Line start selected
                         return;
                     } else if (line.getEnd().distance(lastClickPoint) <= CLICK_RADIUS) {
-                        currentShape = line;
+                        selectedShape = line;
                         selectedLineEnd = line.getEnd(); // Line end selected
                         return;
                     }
                 }
             }
-            currentShape = null;
+            selectedShape = null;
             selectedLineEnd = null;
         }
 
@@ -319,7 +319,7 @@ class VectorGraphicsEditor extends JPanel {
             // Paint the DrawPanel's contents onto the BufferedImage
             this.paint(g2d);
             g2d.dispose();
-        
+            
             // Prompt the user to select a file location
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Export as Image");
@@ -359,9 +359,9 @@ class VectorGraphicsEditor extends JPanel {
             shapeGroup.add(rectButton);
             shapeGroup.add(circleButton);
 
-            lineButton.addActionListener(e -> selectedShape = ShapeType.LINE);
-            rectButton.addActionListener(e -> selectedShape = ShapeType.RECTANGLE);
-            circleButton.addActionListener(e -> selectedShape = ShapeType.CIRCLE);
+            lineButton.addActionListener(e -> currentShape = ShapeType.LINE);
+            rectButton.addActionListener(e -> currentShape = ShapeType.RECTANGLE);
+            circleButton.addActionListener(e -> currentShape = ShapeType.CIRCLE);
             
             this.add(lineButton);
             this.add(rectButton);
@@ -429,8 +429,8 @@ class VectorGraphicsEditor extends JPanel {
             operationGroup.add(drawButton);
             operationGroup.add(editButton);
 
-            drawButton.addActionListener(e -> selectedOperation = OperationType.DRAW);
-            editButton.addActionListener(e -> selectedOperation = OperationType.EDIT);
+            drawButton.addActionListener(e -> currentOperation = OperationType.DRAW);
+            editButton.addActionListener(e -> currentOperation = OperationType.EDIT);
 
             this.add(drawButton);
             this.add(editButton);
